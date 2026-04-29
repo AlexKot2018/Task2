@@ -1,14 +1,15 @@
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-import dao.UserDAO;
-import dao.UserDAOImpl;
+
+import service.UserService;
+import service.UserServiceImpl;
 import model.User;
 import java.util.Scanner;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        UserDAO userDAO = new UserDAOImpl();
+        UserService userService = new UserServiceImpl();
         Scanner scanner = new Scanner(System.in);
         java.util.logging.Logger.getLogger("org.hibernate").setLevel(java.util.logging.Level.OFF);
 
@@ -42,7 +43,7 @@ public class Main {
                         System.out.print("Введите возраст: ");
                         int age = Integer.parseInt(scanner.nextLine());
 
-                        if (userDAO.saveUser(new User(name, email, age))) {
+                        if (userService.saveUser(new User(name, email, age))) {
                             System.out.println(">> Пользователь успешно создан.");
                         } else {
                             System.out.println(">> Ошибка при создании объекта в БД.");
@@ -55,14 +56,14 @@ public class Main {
                     System.out.print("Введите ID пользователя для поиска: ");
                     try {
                         Long id = Long.parseLong(scanner.nextLine());
-                        User u = userDAO.getUser(id);
+                        User u = userService.getUser(id);
                         System.out.println(u != null ? u : ">> Пользователь с ID " + id + " не найден.");
                     } catch (NumberFormatException e) {
                         System.out.println(">> Ошибка: некорректный формат ID.");
                     }
                 }
                 case 3 -> {
-                    List<User> users = userDAO.getAllUsers();
+                    List<User> users = userService.getAllUsers();
                     if (users.isEmpty()) {
                         System.out.println(">> Список пользователей пуст.");
                     }
@@ -74,7 +75,7 @@ public class Main {
                     System.out.print("Введите ID пользователя для изменения данных: ");
                     try {
                         Long id = Long.parseLong(scanner.nextLine());
-                        User u = userDAO.getUser(id);
+                        User u = userService.getUser(id);
                         if (u != null) {
                             System.out.print("Новое имя [" + u.getName() + "]: ");
                             String newName = scanner.nextLine();
@@ -83,7 +84,7 @@ public class Main {
                             }
                             System.out.print("Новый возраст: ");
                             u.setAge(Integer.parseInt(scanner.nextLine()));
-                            if (userDAO.updateUser(u)) {
+                            if (userService.updateUser(u)) {
                                 System.out.println(">> Данные пользователя обновлены.");
                             }
                             else {
@@ -100,7 +101,7 @@ public class Main {
                     System.out.print("Введите ID для удаления: ");
                     try {
                         Long id = Long.parseLong(scanner.nextLine());
-                        if (userDAO.deleteUser(id)) {
+                        if (userService.deleteUser(id)) {
                             System.out.println(">> Пользователь успешно удален.");
                         } else {
                             System.out.println(">> Ошибка: Пользователь с таким ID не существует.");
