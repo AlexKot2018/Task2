@@ -30,7 +30,6 @@ class UserDAOImplIT {
         props.put("hibernate.connection.password", postgres.getPassword());
         props.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         props.put("hibernate.hbm2ddl.auto", "update");
-        props.put("hibernate.show_sql", "true");
         HibernateUtil.setTestConfiguration(props);
     }
 
@@ -48,15 +47,31 @@ class UserDAOImplIT {
     @DisplayName("Сохранение и получение пользователя по ID")
     void integration_SaveAndGet_User() {
         User user = new User("Petr", "petr@mail.com", 30);
-
         boolean saved = userDAO.saveUser(user);
 
-        assertTrue(saved, "Пользователь должен быть сохранен");
-        assertNotNull(user.getId(), "ID должен быть сгенерирован");
+        assertTrue(saved);
+        assertNotNull(user.getId());
 
         User fromDb = userDAO.getUser(user.getId());
         assertNotNull(fromDb);
         assertEquals("Petr", fromDb.getName());
+    }
+
+    @Test
+    @DisplayName("Возврат null при поиске несуществующего ID")
+    void integration_GetNonExistingUser() {
+        User fromDb = userDAO.getUser(999L);
+        assertNull(fromDb);
+    }
+
+    @Test
+    @DisplayName("Ошибка при сохранении дубликата Email")
+    void integration_SaveDuplicateEmail() {
+        String email = "unique@mail.com";
+        userDAO.saveUser(new User("First", email, 20));
+
+        boolean savedDuplicate = userDAO.saveUser(new User("Second", email, 30));
+        assertFalse(savedDuplicate, "Сохранение дубликата email не должно быть успешным");
     }
 
     @Test
@@ -66,8 +81,7 @@ class UserDAOImplIT {
         userDAO.saveUser(new User("User2", "u2@mail.com", 22));
 
         List<User> users = userDAO.getAllUsers();
-
-        assertEquals(2, users.size(), "В списке должно быть ровно 2 пользователя");
+        assertEquals(2, users.size());
     }
 
     @Test
@@ -80,8 +94,7 @@ class UserDAOImplIT {
         boolean updated = userDAO.updateUser(user);
 
         assertTrue(updated);
-        User fromDb = userDAO.getUser(user.getId());
-        assertEquals("NewName", fromDb.getName(), "Имя должно обновиться в БД");
+        assertEquals("NewName", userDAO.getUser(user.getId()).getName());
     }
 
     @Test
@@ -90,10 +103,9 @@ class UserDAOImplIT {
         User user = new User("To Delete", "del@mail.com", 18);
         userDAO.saveUser(user);
         Long id = user.getId();
-
         boolean deleted = userDAO.deleteUser(id);
 
         assertTrue(deleted);
-        assertNull(userDAO.getUser(id), "Пользователь не должен существовать в БД");
+        assertNull(userDAO.getUser(id));
     }
 }

@@ -9,6 +9,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
+        System.out.println("DOCKER_HOST = " + System.getProperty("DOCKER_HOST"));
         UserService userService = new UserServiceImpl();
         Scanner scanner = new Scanner(System.in);
         java.util.logging.Logger.getLogger("org.hibernate").setLevel(java.util.logging.Level.OFF);

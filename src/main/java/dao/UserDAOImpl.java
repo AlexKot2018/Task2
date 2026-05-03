@@ -11,20 +11,28 @@ import java.util.List;
 public class UserDAOImpl implements UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDAOImpl.class);
 
+    @Override
     public boolean saveUser(User user) {
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        Session session = null;
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
             session.persist(user);
             transaction.commit();
             return true;
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            logger.error("Ошибка при сохранении: ", e);
+            if (transaction != null && transaction.getStatus().canRollback()) {
+                transaction.rollback();
+            }
+            logger.error("Ошибка при сохранении: {}", e.getMessage());
             return false;
+        } finally {
+            if (session != null) session.close();
         }
     }
 
+    @Override
     public User getUser(Long id) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session.get(User.class, id);
@@ -34,6 +42,7 @@ public class UserDAOImpl implements UserDAO {
         }
     }
 
+    @Override
     public List<User> getAllUsers() {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session.createQuery("from User", User.class).list();
@@ -43,23 +52,33 @@ public class UserDAOImpl implements UserDAO {
         }
     }
 
+    @Override
     public boolean updateUser(User user) {
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        Session session = null;
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
             session.merge(user);
             transaction.commit();
             return true;
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.getStatus().canRollback()) {
+                transaction.rollback();
+            }
             logger.error("Ошибка обновления: ", e);
             return false;
+        } finally {
+            if (session != null) session.close();
         }
     }
 
+    @Override
     public boolean deleteUser(Long id) {
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        Session session = null;
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
             int affectedRows = session.createMutationQuery("delete from User where id = :id")
                                       .setParameter("id", id)
@@ -67,9 +86,13 @@ public class UserDAOImpl implements UserDAO {
             transaction.commit();
             return affectedRows > 0;
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.getStatus().canRollback()) {
+                transaction.rollback();
+            }
             logger.error("Ошибка удаления ID {}: ", id, e);
             return false;
+        } finally {
+            if (session != null) session.close();
         }
     }
 }
